@@ -30,7 +30,7 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      await mutate({ email, password });
+      await mutate();
     } catch (e) {
       console.log(e.message);
     }

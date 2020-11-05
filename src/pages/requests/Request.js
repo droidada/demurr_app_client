@@ -23,15 +23,17 @@ import CIcon from '@coreui/icons-react';
 import { Link } from 'react-router-dom';
 import { useFetchRequests, useEditRequest, useDeleteRequest } from '../../hooks';
 import Loader from '../../components/Loader';
+import { convertToSlug } from '../../utils/helpers';
 
 const Request = () => {
   const [details, setDetails] = useState([]);
   const [modal, setModal] = useState(false);
-console.log("we are here")
+
   const { data, status } = useFetchRequests();
   const [deleteRequest] = useDeleteRequest()
   const [createRequest] = useEditRequest()
   const [initialData, setInitialData] = useState(undefined);
+  const [fileIsValid, setFileIsValid] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -46,54 +48,62 @@ console.log("we are here")
     phoneNumber: '',
   });
 
-  console.log("we have form data here ", formData)
   const imageOnChangeHandler = (e) => {
-    
     let fileObj = e.target.files[0];
-
-    ExcelRenderer(fileObj, (err, resp) => {
-      if(err){
-        console.log(err);            
+    if (fileObj) {
+      //check for file extension and pass only if it is .xlsx and display error message otherwise
+      let fileName = fileObj.name;
+      if (fileName.slice(fileName.lastIndexOf('.') + 1) === "xlsx") {
+        setFileIsValid(true);
+        ExcelRenderer(fileObj, (err, resp) => {
+          if(err){
+            console.log(err);            
+          }
+          else{
+            const grp = generateObjects(resp).map(dt => {
+              let myData = {};
+              for (let key in dt) {
+                myData = { ...myData, [convertToSlug(key)]: dt[key] }
+              }
+              return myData;
+            });
+            console.log("resp>>", resp, grp);
+          }
+        });
+    
+        // var name = fileObj.name;
+        // const reader = new FileReader();
+        // reader.onload = (evt) => { // evt = on_file_select event
+        //     /* Parse data */
+        //     const bstr = evt.target.result;
+        //     const wb = XLSX.read(bstr, {type:'binary'});
+        //     /* Get first worksheet */
+        //     const wsname = wb.SheetNames[1];
+        //     const ws = wb.Sheets[wsname];
+        //     console.log("WS>>>>>", ws);
+        //     /* Convert array of arrays */
+        //     const data = XLSX.utils.sheet_to_json(ws);
+        //     /* Update state */
+        //     console.log("Data>>>", JSON.stringify(data));
+        // };
+        // reader.readAsBinaryString(fileObj);
+    
+    
+        readFile(fileObj)
+          .then((readedData) => {
+              console.log(readedData, generateObjects(readedData));
+    
+              
+              setInitialData(readedData)
+            })
+          .catch((error) => console.error(error));
+    
+        //setFormData({ ...formData || '', image: URL.createObjectURL(e.target.files[0]) });
+      } else {
+        setFileIsValid(false);
+        console.log('Please kindly import an Excel file only');
       }
-      else{
-        console.log("resp>>", resp)
-       // console.log("cols>>>", resp.cols);
-        //  console.log("rows>>>", resp.rows);
-        // this.setState({
-        //   cols: resp.cols,
-        //   rows: resp.rows
-        // });
-      }
-    });               
-
-    // var name = fileObj.name;
-    // const reader = new FileReader();
-    // reader.onload = (evt) => { // evt = on_file_select event
-    //     /* Parse data */
-    //     const bstr = evt.target.result;
-    //     const wb = XLSX.read(bstr, {type:'binary'});
-    //     /* Get first worksheet */
-    //     const wsname = wb.SheetNames[1];
-    //     const ws = wb.Sheets[wsname];
-    //     console.log("WS>>>>>", ws);
-    //     /* Convert array of arrays */
-    //     const data = XLSX.utils.sheet_to_json(ws);
-    //     /* Update state */
-    //     console.log("Data>>>", JSON.stringify(data));
-    // };
-    // reader.readAsBinaryString(fileObj);
-
-
-    readFile(fileObj)
-      .then((readedData) => {
-          console.log(readedData)
-
-          
-          setInitialData(readedData)
-        })
-      .catch((error) => console.error(error));
-
-    //setFormData({ ...formData || '', image: URL.createObjectURL(e.target.files[0]) });
+    }
   };
 
   const { name, title, description, image, line1, line2, zipCode, state, city, phoneNumber } = formData;
@@ -291,7 +301,7 @@ console.log("we are here")
               </CForm>
             </CModalBody>
             <CModalFooter>
-              <CButton color="primary" onClick={handleSubmit}>
+              <CButton color="primary" disabled={!fileIsValid} onClick={handleSubmit}>
                 Submit
               </CButton>{' '}
               <CButton color="secondary" onClick={toggle}>
@@ -301,11 +311,13 @@ console.log("we are here")
           </CModal>
         </CCol>
       </CRow>
-      <ReactExcel
-        initialData={initialData}
-        activeSheetClassName='active-sheet'
-        reactExcelClassName='react-excel'
-      />
+      <div className="sheet-wrapper">
+        <ReactExcel
+          initialData={initialData}
+          activeSheetClassName='active-sheet'
+          reactExcelClassName='react-excel'
+        />
+      </div>
     </>
   );
 }
