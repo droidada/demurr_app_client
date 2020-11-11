@@ -23,7 +23,7 @@ import CIcon from '@coreui/icons-react';
 import { Link } from 'react-router-dom';
 import { useFetchRequests, useEditRequest, useDeleteRequest } from '../../hooks';
 import Loader from '../../components/Loader';
-import { convertToSlug } from '../../utils/helpers';
+import { checkDateValidity, convertToSlug } from '../../utils/helpers';
 
 const Request = () => {
   const [details, setDetails] = useState([]);
@@ -60,14 +60,20 @@ const Request = () => {
             console.log(err);            
           }
           else{
+            const errorArr = [];
             const grp = generateObjects(resp).map(dt => {
               let myData = {};
               for (let key in dt) {
                 myData = { ...myData, [convertToSlug(key)]: dt[key] }
               }
+              if (!checkDateValidity(myData.free_start_date, myData.free_end_date)) {
+                errorArr.push('Something is wrong');
+              } else {
+                console.log(checkDateValidity(myData.free_start_date, myData.free_end_date));
+              }
               return myData;
             });
-            console.log("resp>>", resp, grp);
+            console.log("resp>>", resp, grp, errorArr.length);
           }
         });
     
