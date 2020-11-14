@@ -24,20 +24,20 @@ const Login = () => {
 
   const { memoizedErrorMsg } = useContext(AuthContext);
 
-  let [mutate] = useLogin({ email, password });
+  //let [mutate] = useLogin({ email, password });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      await mutate({ email, password });
+     // await mutate({  });
     } catch (e) {
       console.log(e.message);
     }
   };
 
   const handleChange = (e) => {
-    setformValues({ ...formValues, [e.target.id]: e.target.value });
+   setformValues({ ...formValues, [e.target.id]: e.target.value });
   };
 
   return (

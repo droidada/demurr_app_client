@@ -57,9 +57,13 @@ const App = () => {
           render={(props) => <Register {...props} />}
         />
 
-        <PrivateRoute path="/">
+        {/* <PrivateRoute path="/">
           <TheLayout />
-        </PrivateRoute>
+        </PrivateRoute> */}
+
+        <Route path="/">
+          <TheLayout />
+        </Route>
 
         {/* <PrivateRoute
           path="/"
